@@ -1,0 +1,128 @@
+--- Uboot.org/lib_mips/board.c	2019-03-30 23:31:30.910882985 +0800
++++ Uboot/lib_mips/board.c	2019-03-31 00:25:17.871344829 +0800
+@@ -1311,7 +1311,11 @@
+ 	bd_t *bd;
+ 	int i;
+ 	int timer1= CONFIG_BOOTDELAY;
++	int abort = 0;
+ 	unsigned char BootType='3', confirm=0;
++	unsigned char keymenu = 0;
++	unsigned char revbuf = 0;
++	unsigned char revflag = 0;
+ 	int my_tmp;
+ 	char addr_str[11];
+ #if defined (CFG_ENV_IS_IN_FLASH)
+@@ -1961,24 +1965,94 @@
+ 	    timer1 = s ? (int)simple_strtol(s, NULL, 10) : CONFIG_BOOTDELAY;
+ 	}
+ 
+-	OperationSelect();   
+-	while (timer1 > 0) {
++	printf("\nPress 'ctrl+C/c' to stop autoboot: %2d ", timer1);
++
++	if (tstc()) 
++	{						/* we got a key press	*/
++		(void) getc();  	/* consume input	*/
++	}
++
++	while ((timer1 > 0) && (!abort)) 
++	{
+ 		--timer1;
+ 		/* delay 100 * 10ms */
+-		for (i=0; i<100; ++i) {
+-			if ((my_tmp = tstc()) != 0) {	/* we got a key press	*/
+-				timer1 = 0;	/* no more delay	*/
+-				BootType = getc();
+-				if ((BootType < '0' || BootType > '5') && (BootType != '7') && (BootType != '8') && (BootType != '9'))
+-					BootType = '3';
+-				printf("\n\rYou choosed %c\n\n", BootType);
+-				break;
++		for (i=0; !abort && i<100; ++i)
++		{
++			if (tstc()) 
++			{						/* we got a key press	*/
++ 				(void) getc();
++				if(0x03 == getc())
++				{
++					abort  = 1;			/* don't auto boot	*/
++					timer1 = 0;			/* no more delay	*/
++					//(void) getc();  	/* consume input	*/
++					break;
++				}
+ 			}
+ 			udelay (10000);
+ 		}
+ 		printf ("\b\b\b%2d ", timer1);
+ 	}
+-	putc ('\n');
++	if (!abort)
++	{
++		/* permanently enable normal console output */
++		printf("\n\nTime out!!\n\nSystem default BootType 3.");
++		BootType = '3';
++	}
++	else
++	{
++		/* into uboot menu */
++		
++		printf("\n");
++
++		OperationSelect();
++
++		printf("\n");
++		
++		printf("\rEnter your choose:  ");
++
++		while(1)
++		{
++			if (tstc()) 
++			{						/* we got a key press	*/
++				(void) getc();
++				keymenu = getc();
++				if(keymenu != 0x0d)
++				{
++					revflag = 1;
++					revbuf = keymenu;
++					printf("\b%c", revbuf);
++				}
++				else if(keymenu == 0x0d && revflag == 1)
++				{
++					revflag = 0;
++					if(revbuf=='q' || revbuf=='Q')
++					{
++						BootType = '3';
++						revflag = 0;
++						break;
++					}
++					else if ((revbuf < '1' || revbuf > '5') && (revbuf != '7') && (revbuf != '8') && (revbuf != '9'))
++					{
++						BootType = '0';
++						revflag = 0;
++						printf("\b ");
++					}
++					
++					else
++					{
++						BootType = revbuf;
++						printf("\n\nYou choosed is %c", BootType);
++						break;
++					}
++				}
++			}
++			udelay (10000);   //* 10ms处理一次事件
++		}
++	}
++
++	printf("\n");
++	
+ 	if(BootType == '3') {
+ 		char *argv[2];
+ 		sprintf(addr_str, "0x%X", CFG_KERN_ADDR);
+@@ -2009,6 +2083,7 @@
+ 		case '2':
+ 			printf("   \n%d: System Load Linux Kernel then write to Flash via TFTP. \n", SEL_LOAD_LINUX_WRITE_FLASH);
+ 			printf(" Warning!! Erase Linux in Flash then burn new one. Are you sure?(Y/N)\n");
++			(void) getc();
+ 			confirm = getc();
+ 			if (confirm != 'y' && confirm != 'Y') {
+ 				printf(" Operation terminated\n");
