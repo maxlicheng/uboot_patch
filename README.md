@@ -39,5 +39,5 @@ Please choose the operation:
 
 3.执行补丁
 ```Barsh
-    patch -p1 < rt5350_uboot_4320.patch
+    patch -p1 < ralink_uboot_mips_4320.patch
 ```
