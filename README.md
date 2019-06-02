@@ -41,3 +41,8 @@ Please choose the operation:
 ```Barsh
     patch -p1 < ralink_uboot_mips_4320.patch
 ```
+# 具体使用方式
+
+博客《HLK-RM04 WIFI模块 uboot 编译及修改》
+
+http://www.maxlicheng.com/?p=158
