@@ -1,4 +1,4 @@
-# uboot_patch
+# 说明
 
 因路由器自带uboot不能进入uboot菜单，且编译官方原版uboot也一样无法进入：
 
@@ -28,7 +28,7 @@ Please choose the operation:
 
 现把修改源码后生成的patch放出来，方便有需要的朋友使用。
 
-# 使用方式：
+### 使用方式：
 
 1.下载官方uboot源码
 ```Barsh
@@ -41,8 +41,8 @@ Please choose the operation:
 ```Barsh
     patch -p1 < ralink_uboot_mips_4320.patch
 ```
-# 具体使用方式
+### 具体使用方式
 
 博客《HLK-RM04 WIFI模块 uboot 编译及修改》
 
-http://www.maxlicheng.com/?p=158
+https://www.maxlicheng.com/github/158.html
